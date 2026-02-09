@@ -203,7 +203,7 @@ jobs:
           cat build-report.txt
 
       - name: Upload build report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-report-${{ matrix.defconfig }}
           path: buildroot-${{ env.BUILDROOT_VERSION }}/build-report.txt
@@ -211,7 +211,7 @@ jobs:
 
       - name: Upload test results
         if: matrix.defconfig == 'generic_x86_64_defconfig' && github.event.inputs.test_image != 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-${{ matrix.defconfig }}
           path: |
@@ -220,7 +220,7 @@ jobs:
           retention-days: 30
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.defconfig }}-artifacts
           path: buildroot-${{ env.BUILDROOT_VERSION }}/output/images/
@@ -274,7 +274,7 @@ jobs:
     
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: build-report-*
           merge-multiple: false
