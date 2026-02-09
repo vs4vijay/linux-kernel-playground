@@ -1,0 +1,17 @@
+# U-Boot boot script for Generic ARM64 Development Board
+# This script is used by U-Boot to boot the kernel
+
+# Set environment variables
+setenv bootargs 'console=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait fsck.repair=yes elevator=deadline'
+
+# Load the kernel
+load mmc 0:1 ${kernel_addr_r} Image
+
+# Load the device tree
+load mmc 0:1 ${fdt_addr_r} arm64/virt.dtb
+
+# Load the initramfs (if exists)
+load mmc 0:1 ${ramdisk_addr_r} initramfs-linux.img || true
+
+# Boot the kernel
+booti ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}

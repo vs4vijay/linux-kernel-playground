@@ -1,0 +1,17 @@
+# U-Boot boot script for Raspberry Pi 4
+# This script is used by U-Boot to boot the kernel
+
+# Set environment variables
+setenv bootargs 'console=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait fsck.repair=yes elevator=deadline'
+
+# Load the kernel
+load mmc 0:1 ${kernel_addr_r} kernel8.img
+
+# Load the device tree
+load mmc 0:1 ${fdt_addr_r} bcm2711-rpi-4-b.dtb
+
+# Load the initramfs (if exists)
+load mmc 0:1 ${ramdisk_addr_r} initramfs-linux.img || true
+
+# Boot the kernel
+bootz ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}

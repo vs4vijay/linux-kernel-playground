@@ -1,0 +1,61 @@
+# device table - device file listings for buildroot
+# format: <name> <type> <mode> <uid> <gid> <major> <minor> <start> <inc> <count>
+
+# /dev entries
+/dev		d	755	0	0	-	-	-	-	-
+/dev/console	c	622	0	0	5	1	-	-	-
+/dev/full	c	666	0	0	1	7	-	-	-
+/dev/kmem	c	640	0	0	1	2	-	-	-
+/dev/kmsg	c	666	0	0	1	11	-	-	-
+/dev/null	c	666	0	0	1	3	-	-	-
+/dev/port	c	640	0	0	1	4	-	-	-
+/dev/random	c	666	0	0	1	8	-	-	-
+/dev/urandom	c	666	0	0	1	9	-	-	-
+/dev/zero	c	666	0	0	1	5	-	-	-
+/dev/tty	c	666	0	0	5	0	-	-	-
+/dev/ttyS	c	660	0	0	4	64	0	1	4
+/dev/ptmx	c	666	0	0	5	2	-	-	-
+/dev/pts	d	755	0	0	-	-	-	-	-
+/dev/loop	b	660	0	0	7	0	0	1	8
+/dev/fb	b	660	0	0	29	0	-	-	-
+/dev/input	d	755	0	0	-	-	-	-	-
+/dev/input/mice	c	660	0	0	13	63	-	-	-
+/dev/input/event0	c	640	0	0	13	64	-	-	-
+/dev/input/event1	c	640	0	0	13	65	-	-	-
+/dev/input/mouse0	c	640	0	0	13	32	-	-	-
+/dev/dri	d	755	0	0	-	-	-	-	-
+/dev/dri/card0	b	660	0	0	226	0	-	-	-
+/dev/snd	d	755	0	0	-	-	-	-	-
+/dev/snd/controlC0	c	660	0	0	116	0	-	-	-
+/dev/snd/pcmC0D0c	c	660	0	0	116	24	-	-	-
+/dev/snd/pcmC0D0p	c	660	0	0	116	16	-	-	-
+/dev/snd/seq	c	660	0	0	116	1	-	-	-
+/dev/snd/timer	c	660	0	0	116	33	-	-	-
+/dev/sda	b	660	0	0	8	0	-	-	-
+/dev/sda1	b	660	0	0	8	1	-	-	-
+/dev/sda2	b	660	0	0	8	2	-	-	-
+/dev/sdb	b	660	0	0	8	16	-	-	-
+/dev/sdb1	b	660	0	0	8	17	-	-	-
+/dev/sr0	b	660	0	0	11	0	-	-	-
+
+# /proc entries
+/proc		d	555	0	0	-	-	-	-	-
+/proc/sys	d	555	0	0	-	-	-	-	-
+
+# /sys entries
+/sys		d	555	0	0	-	-	-	-	-
+
+# /tmp entries
+/tmp		d	1777	0	0	-	-	-	-	-
+
+# /var entries
+/var		d	755	0	0	-	-	-	-	-
+/var/log	d	755	0	0	-	-	-	-	-
+/var/run	d	755	0	0	-	-	-	-	-
+/var/tmp	d	1777	0	0	-	-	-	-	-
+
+# /home entries
+/home		d	755	0	0	-	-	-	-	-
+
+# /root entries
+/root		d	700	0	0	-	-	-	-	-
