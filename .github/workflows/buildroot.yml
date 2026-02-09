@@ -92,7 +92,7 @@ jobs:
           echo "ARCH=$(echo '${{ matrix.defconfig }}' | cut -d'_' -f1)" >> $GITHUB_ENV
 
       - name: Cache BuildRoot source
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: buildroot-${{ env.BUILDROOT_VERSION }}
           key: ${{ runner.os }}-buildroot-source-${{ env.BUILDROOT_VERSION }}-${{ hashFiles('**/buildroot-configs/**') }}
@@ -100,7 +100,7 @@ jobs:
             ${{ runner.os }}-buildroot-source-${{ env.BUILDROOT_VERSION }}-
 
       - name: Cache BuildRoot build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: buildroot-${{ env.BUILDROOT_VERSION }}/output
           key: ${{ runner.os }}-buildroot-build-${{ matrix.defconfig }}-${{ env.BUILDROOT_VERSION }}-${{ hashFiles('buildroot-configs/**/${{ matrix.defconfig }}') }}

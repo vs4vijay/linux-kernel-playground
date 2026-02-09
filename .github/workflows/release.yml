@@ -97,7 +97,7 @@ jobs:
           echo "VERSION=${{ needs.validate.outputs.version }}" >> $GITHUB_ENV
 
       - name: Cache BuildRoot source
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: buildroot-${{ env.BUILDROOT_VERSION }}
           key: ${{ runner.os }}-buildroot-source-${{ env.BUILDROOT_VERSION }}-${{ hashFiles('**/buildroot-configs/**') }}
