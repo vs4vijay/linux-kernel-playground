@@ -593,7 +593,22 @@ main() {
     echo "🧪 Automated QEMU Test Runner"
     echo "=============================="
     
+    # Debug: Print all arguments
+    echo "DEBUG: Arguments received: $*"
+    echo "DEBUG: BUILD_DIR: $BUILD_DIR"
+    echo "DEBUG: ARCH: $ARCH"
+    echo "DEBUG: TEST_SUITE: $TEST_SUITE"
+    echo "DEBUG: TIMEOUT: $TIMEOUT"
+    echo "DEBUG: REPORT_FILE: $REPORT_FILE"
+    
     parse_args "$@"
+    
+    # Additional validation to prevent command injection
+    if [[ "$BUILD_DIR" == "output" ]] || [[ "$BUILD_DIR" =~ ^[0-9] ]]; then
+        print_error "Invalid build directory: $BUILD_DIR"
+        echo "Expected usage: $0 --arch x86_64 --suite basic /path/to/buildroot/output"
+        exit 1
+    fi
     validate_inputs
     find_images
     check_dependencies
