@@ -115,7 +115,8 @@ jobs:
             net-tools git rsync unzip wget curl bc python3 python3-pip \
             qemu-system-x86 qemu-system-arm qemu-utils \
             cpio kmod udev device-tree-compiler swig \
-            libncursesw5-dev bison flex libelf-dev libssl-dev
+            libncursesw5-dev bison flex libelf-dev libssl-dev \
+            jq nc telnet
 
       - name: Download BuildRoot
         if: steps.cache-buildroot.outputs.cache-hit != 'true'
@@ -208,6 +209,16 @@ jobs:
           path: buildroot-${{ env.BUILDROOT_VERSION }}/build-report.txt
           retention-days: 30
 
+      - name: Upload test results
+        if: matrix.defconfig == 'generic_x86_64_defconfig' && github.event.inputs.test_image != 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.defconfig }}
+          path: |
+            buildroot-${{ env.BUILDROOT_VERSION }}/test-results.json
+            buildroot-${{ env.BUILDROOT_VERSION }}/qemu-*.log
+          retention-days: 30
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -223,16 +234,8 @@ jobs:
           if [[ -f "output/images/bzImage" && -f "output/images/rootfs.ext2" ]]; then
             echo "🧪 Testing image with QEMU..."
             
-            # Test boot with timeout
-            timeout 300 qemu-system-x86_64 \
-              -m 512M \
-              -kernel output/images/bzImage \
-              -hda output/images/rootfs.ext2 \
-              -append "root=/dev/sda console=ttyS0" \
-              -nographic \
-              -no-reboot || {
-              echo "⚠️  QEMU test timed out (this is normal for successful boot)"
-            }
+            # Run comprehensive QEMU tests
+            ../test-ci.sh --arch x86_64 --suite basic --timeout 300 output
             
             echo "✅ QEMU test completed"
           else

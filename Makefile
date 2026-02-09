@@ -182,26 +182,58 @@ menuconfig:
 
 # Test with QEMU (for x86_64 configurations)
 test:
-	@config=$$(find $(CONFIG_DIR) -name "*_defconfig" -type f | head -1 | xargs basename); \
-	if [[ "$$config" != *"x86_64"* ]]; then \
-		echo "$(YELLOW)[WARNING] QEMU testing is only supported for x86_64 configurations$(NC)"; \
+	@config=$$(find $(CONFIG_DIR) -name "*_defconfig" -type f | head -1 | xargs basename)
+	if [[ "$config" != *"x86_64"* ]]; then \
+		echo "$(YELLOW)[WARNING] Comprehensive QEMU testing is only supported for x86_64 configurations$(NC)"; \
 	else \
-		if [ -f "$(BUILDROOT_DIR)/output/images/bzImage" ] && [ -f "$(BUILDROOT_DIR)/output/images/rootfs.ext2" ]; then \
-			echo "$(BLUE)[INFO] Testing with QEMU...$(NC)"; \
-			timeout 300 qemu-system-x86_64 \
-				-m 512M \
-				-kernel $(BUILDROOT_DIR)/output/images/bzImage \
-				-hda $(BUILDROOT_DIR)/output/images/rootfs.ext2 \
-				-append "root=/dev/sda console=ttyS0" \
-				-nographic \
-				-no-reboot || echo "$(YELLOW)[WARNING] QEMU test timed out (normal for successful boot)$(NC)"; \
-			echo "$(GREEN)[SUCCESS] QEMU test completed$(NC)"; \
+		if [ -f "$(BUILD_DIR)/output/images/bzImage" ] && [ -f "$(BUILD_DIR)/output/images/rootfs.ext2" ]; then \
+			echo "$(BLUE)[INFO] Running comprehensive QEMU tests...$(NC)"; \
+			./test-ci.sh --arch x86_64 --suite basic --timeout 300 $(BUILD_DIR)/output || { \
+				echo "$(RED)[ERROR] QEMU tests failed$(NC)"; \
+				exit 1; \
+			} \
+			echo "$(GREEN)[SUCCESS] All QEMU tests completed$(NC)"; \
 		else \
-			echo "$(RED)[ERROR] Required image files not found$(NC)"; \
+			echo "$(RED)[ERROR] QEMU test failed - missing required files$(NC)"; \
 			echo "Required: bzImage, rootfs.ext2"; \
 			echo "Available:"; \
-			ls -la $(BUILDROOT_DIR)/output/images/ 2>/dev/null || echo "No images found"; \
+			ls -la $(BUILD_DIR)/output/images/ 2>/dev/null || echo "No images found"; \
 		fi; \
+	fi
+
+# Advanced QEMU testing with different test suites
+test-basic:
+	@if [ -f "$(BUILD_DIR)/output/images/bzImage" ] && [ -f "$(BUILD_DIR)/output/images/rootfs.ext2" ]; then \
+		echo "$(BLUE)[INFO] Running basic QEMU tests...$(NC)"; \
+		./test-ci.sh --arch x86_64 --suite basic --timeout 300 $(BUILD_DIR)/output; \
+	else \
+		echo "$(RED)[ERROR] No build artifacts found$(NC)"; \
+	fi
+
+test-network:
+	@if [ -f "$(BUILD_DIR)/output/images/bzImage" ] && [ -f "$(BUILD_DIR)/output/images/rootfs.ext2" ]; then \
+		echo "$(BLUE)[INFO] Running network QEMU tests...$(NC)"; \
+		./test-ci.sh --arch x86_64 --suite network --timeout 300 $(BUILD_DIR)/output; \
+	else \
+		echo "$(RED)[ERROR] No build artifacts found$(NC)"; \
+	fi
+
+test-full:
+	@if [ -f "$(BUILD_DIR)/output/images/bzImage" ] && [ -f "$(BUILD_DIR)/output/images/rootfs.ext2" ]; then \
+		echo "$(BLUE)[INFO] Running full QEMU test suite...$(NC)"; \
+		./test-ci.sh --arch x86_64 --suite full --timeout 600 $(BUILD_DIR)/output; \
+	else \
+		echo "$(RED)[ERROR] No build artifacts found$(NC)"; \
+	fi
+
+# Manual QEMU testing with interactive mode
+test-interactive:
+	@if [ -f "$(BUILD_DIR)/output/images/bzImage" ] && [ -f "$(BUILD_DIR)/output/images/rootfs.ext2" ]; then \
+		echo "$(BLUE)[INFO] Starting interactive QEMU session...$(NC)"; \
+		echo "$(YELLOW)[INFO] Press Ctrl+A, X to exit QEMU$(NC)"; \
+		./test-qemu.sh --arch x86_64 --test-type ssh --verbose $(BUILD_DIR)/output/images/bzImage $(BUILD_DIR)/output/images/rootfs.ext2; \
+	else \
+		echo "$(RED)[ERROR] No build artifacts found$(NC)"; \
 	fi
 
 # Save current configuration

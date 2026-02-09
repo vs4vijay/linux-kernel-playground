@@ -137,7 +137,47 @@ make test
 
 # Or using the build script
 ./build.sh --test generic_x86_64_defconfig
+
+# Run different test suites
+make test-basic      # Basic boot and system health tests
+make test-network     # Include network connectivity tests  
+make test-full        # Comprehensive testing with package management
+make test-interactive # Interactive QEMU session for manual testing
+
+# Using the dedicated test scripts
+./test-ci.sh --arch x86_64 --suite basic --timeout 300 buildroot-2024.02.1/output
+./test-qemu.sh --arch x86_64 --test-type ssh --verbose buildroot/output/images/bzImage buildroot/output/images/rootfs.ext2
 ```
+
+### QEMU Test Suites
+
+The project includes comprehensive QEMU testing:
+
+**Basic Tests:**
+- System boot verification
+- Login prompt availability
+- System process checks
+- Filesystem mounting verification
+- Hello World execution
+
+**Network Tests:**
+- All basic tests plus:
+- Network interface configuration
+- IP address assignment
+- DNS resolution testing
+
+**Full Tests:**
+- All network tests plus:
+- SSH service accessibility
+- Package management verification
+- System performance testing
+- Memory usage monitoring
+- System logging verification
+
+**Interactive Testing:**
+- Full SSH access to the running system
+- Manual testing and exploration
+- Real-time system monitoring
 
 ### CI/CD Testing
 

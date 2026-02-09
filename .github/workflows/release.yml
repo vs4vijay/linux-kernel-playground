@@ -105,7 +105,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev libssl-dev libpcap-dev net-tools git rsync unzip wget curl bc python3 python3-pip qemu-system-x86 qemu-system-arm qemu-utils cpio kmod udev device-tree-compiler swig libncursesw5-dev bison flex libelf-dev libssl-dev zip p7zip-full jq
+          sudo apt-get install -y build-essential libncurses5-dev libssl-dev libpcap-dev net-tools git rsync unzip wget curl bc python3 python3-pip qemu-system-x86 qemu-system-arm qemu-utils cpio kmod udev device-tree-compiler swig libncursesw5-dev bison flex libelf-dev libssl-dev zip p7zip-full jq nc telnet
 
       - name: Download BuildRoot
         run: |
@@ -173,9 +173,6 @@ jobs:
           echo "Architecture: ${{ env.ARCH }}" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
           echo "Build Date: $(date)" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
           echo "BuildRoot Version: ${{ env.BUILDROOT_VERSION }}" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
-          echo "" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
-          echo "Files:" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
-          ls -lah "release-${{ matrix.defconfig }}-${{ env.VERSION }}/" >> "release-${{ matrix.defconfig }}-${{ env.VERSION }}/README.txt"
 
       - name: Create checksums
         run: |
@@ -194,11 +191,13 @@ jobs:
         if: matrix.defconfig == 'generic_x86_64_defconfig'
         run: |
           cd buildroot-${{ env.BUILDROOT_VERSION }}
+          
           if [[ -f "output/images/bzImage" && -f "output/images/rootfs.ext2" ]]; then
             echo "Testing release image with QEMU..."
-            timeout 300 qemu-system-x86_64 -m 512M -kernel output/images/bzImage -hda output/images/rootfs.ext2 -append "root=/dev/sda console=ttyS0" -nographic -no-reboot || {
-              echo "QEMU test timed out (this is normal for successful boot)"
-            }
+            
+            # Run comprehensive QEMU tests
+            ../test-ci.sh --arch x86_64 --suite basic --timeout 300 output
+            
             echo "QEMU test completed"
           else
             echo "QEMU test skipped - missing required files"
@@ -223,6 +222,16 @@ jobs:
             buildroot-${{ env.BUILDROOT_VERSION }}/output/build/build-time.log
           retention-days: 30
 
+      - name: Upload test results
+        if: matrix.defconfig == 'generic_x86_64_defconfig'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.defconfig }}-${{ env.VERSION }}-test-results
+          path: |
+            buildroot-${{ env.BUILDROOT_VERSION }}/test-results.json
+            buildroot-${{ env.BUILDROOT_VERSION }}/qemu-*.log
+          retention-days: 30
+
   create-release:
     name: Create GitHub Release
     needs: [validate, build-release]
@@ -239,31 +248,73 @@ jobs:
           pattern: "*-${{ needs.validate.outputs.version }}.tar.gz"
           merge-multiple: false
 
-      - name: Create release notes file
+      - name: Create release notes
         run: |
-          echo "BuildRoot Linux OS ${{ needs.validate.outputs.version }}" > release_notes.md
-          echo "" >> release_notes.md
-          echo "Release Information:" >> release_notes.md
-          echo "- Version: ${{ needs.validate.outputs.version }}" >> release_notes.md
-          echo "- BuildRoot Version: ${{ env.BUILDROOT_VERSION }}" >> release_notes.md
-          echo "- Release Date: $(date)" >> release_notes.md
-          echo "- Type: ${{ needs.validate.outputs.is_prerelease == 'true' && 'Pre-release' || 'Stable Release' }}" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "Available Configurations:" >> release_notes.md
-          echo "- generic_x86_64_defconfig (QEMU and x86_64 hardware)" >> release_notes.md
-          echo "- raspberrypi4_64_defconfig (Raspberry Pi 4)" >> release_notes.md
-          echo "- arm64_dev_defconfig (Generic ARM64 development)" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "Installation:" >> release_notes.md
-          echo "1. Download the desired configuration archive" >> release_notes.md
-          echo "2. Extract the archive" >> release_notes.md
-          echo "3. Follow the instructions in the README.txt file" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "QEMU Testing:" >> release_notes.md
-          echo "For x86_64:" >> release_notes.md
-          echo "qemu-system-x86_64 -m 512M -kernel bzImage -hda rootfs.ext2 -append root=/dev/sda console=ttyS0" >> release_notes.md
-          echo "For ARM64:" >> release_notes.md
-          echo "qemu-system-aarch64 -m 512M -kernel Image -hda rootfs.ext2 -append root=/dev/sda console=ttyAMA0" >> release_notes.md
+          cat > release_notes.md << 'EOF'
+# BuildRoot Linux OS RELEASE_VERSION
+
+## Release Information
+
+- Version: RELEASE_VERSION
+- BuildRoot Version: BUILDROOT_VERSION
+- Release Date: DATE
+- Type: Release
+
+## Available Configurations
+
+This release includes all supported configurations:
+- generic_x86_64_defconfig (QEMU and x86_64 hardware)
+- raspberrypi4_64_defconfig (Raspberry Pi 4)
+- arm64_dev_defconfig (Generic ARM64 development)
+
+## Installation
+
+### Quick Start
+
+1. Download the desired configuration archive
+2. Extract the archive
+3. Follow the instructions in the README.txt file
+
+### QEMU Testing
+
+For x86_64 configurations:
+bash
+qemu-system-x86_64 -m 512M -kernel bzImage -hda rootfs.ext2 -append root=/dev/sda console=ttyS0
+
+For ARM64 configurations:
+bash
+qemu-system-aarch64 -m 512M -kernel Image -hda rootfs.ext2 -append root=/dev/sda console=ttyAMA0
+
+### Raspberry Pi 4
+
+1. Extract raspberrypi4_64_defconfig archive
+2. Copy all files to SD card boot partition
+3. Insert SD card and boot the Raspberry Pi
+
+## Verification
+
+Each release includes:
+- SHA256 checksums (sha256sums.txt)
+- MD5 checksums (md5sums.txt)
+
+Verify your download:
+bash
+sha256sum -c sha256sums.txt
+
+## Bug Reports
+
+Please report issues at the repository issues page.
+
+## Documentation
+
+Full documentation is available in the repository README.
+
+Note: This release was automatically built and tested using GitHub Actions.
+EOF
+          
+          sed -i "s/RELEASE_VERSION/${{ needs.validate.outputs.version }}/g" release_notes.md
+          sed -i "s/BUILDROOT_VERSION/${{ env.BUILDROOT_VERSION }}/g" release_notes.md
+          sed -i "s/DATE/$(date)/g" release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -323,6 +374,7 @@ jobs:
           echo "Artifacts:" >> $GITHUB_STEP_SUMMARY
           echo "- Configuration archives (.tar.gz, .zip)" >> $GITHUB_STEP_SUMMARY
           echo "- Build reports and logs" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results and logs" >> $GITHUB_STEP_SUMMARY
           echo "- Checksum files for verification" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify on success
@@ -335,4 +387,4 @@ jobs:
         if: failure()
         run: |
           echo "Release process failed"
-          echo "Check the workflow logs for details"
+          echo "Check workflow logs for details"
