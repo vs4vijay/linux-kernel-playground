@@ -88,7 +88,7 @@ jobs:
       - name: Set variables
         run: |
           echo "MY_BUILDROOT_CONFIG=${{ matrix.defconfig }}" >> $GITHUB_ENV
-          echo "LINUX_NAME=${{ matrix.defconfig%_defconfig }}" >> $GITHUB_ENV
+          echo "LINUX_NAME=${{ matrix.defconfig }}%_defconfig" >> $GITHUB_ENV
           echo "ARCH=$(echo '${{ matrix.defconfig }}' | cut -d'_' -f1)" >> $GITHUB_ENV
 
       - name: Cache BuildRoot source
